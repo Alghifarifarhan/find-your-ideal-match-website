@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Your Ideal Match 🔮</title>
+  <link rel="icon" type="image/png" href="love.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Keyframes untuk animasi fade in */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Keyframes untuk animasi modal */
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .modal-in {
+        animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    /* Agar option di select default terlihat */
+    .custom-select option {
+      color: #1f2937; /* Dark text */
+    }
+
+    /* Scrollbar styling untuk modal/popup */
+    .custom-scroll::-webkit-scrollbar {
+        width: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background: #f9a8d4; /* pink-300 */
+        border-radius: 10px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-800 to-pink-700 min-h-screen flex items-center justify-center text-white font-sans p-4">
+
+  <audio id="backgroundMusic" loop>
+    <source src="song.mp3" type="audio/mpeg">
+    Browser Anda tidak mendukung elemen audio.
+  </audio>
+
+  <div id="app" class="max-w-sm md:max-w-md w-full bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center border border-white/20 transform transition duration-500 hover:scale-[1.02]">
+    <h1 class="text-2xl md:text-4xl font-extrabold mb-6 text-pink-200 drop-shadow-lg">✨ Temukan Pasangan Ideal Kamu ✨</h1>
+
+    <div id="step1" class="space-y-6">
+      <p class="mb-4 text-lg font-light">Pilih gender kamu:</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-6">
+        <button onclick="selectGender('Pria')" class="flex-1 bg-pink-600 hover:bg-pink-700 active:bg-pink-800 transition duration-300 transform hover:-translate-y-1 shadow-lg px-6 py-3 rounded-xl text-lg font-semibold">
+          <span class="mr-2">🤵</span> Pria
+        </button>
+        <button onclick="selectGender('Wanita')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition duration-300 transform hover:-translate-y-1 shadow-lg px-6 py-3 rounded-xl text-lg font-semibold">
+          <span class="mr-2">👰</span> Wanita
+        </button>
+      </div>
+    </div>
+
+    <div id="step2" class="hidden space-y-6 animate-fadeIn">
+      <p class="mt-6 mb-3 text-lg font-light">Apa zodiak kamu?</p>
+      
+      <button onclick="openModal('zodiac')" id="zodiacButton" class="w-full bg-white/20 border-white/30 border text-white p-3 rounded-xl text-left flex justify-between items-center hover:bg-white/30 transition duration-300">
+          <span id="selectedZodiac">Pilih zodiak kamu...</span>
+          <span class="text-xl">⬇️</span>
+      </button>
+
+      <button onclick="nextStep(3)" id="nextStep2Button" disabled class="w-full mt-4 bg-pink-500/50 cursor-not-allowed px-4 py-2 rounded-xl text-lg font-medium transition duration-300">Lanjut <span class="ml-1">➡️</span></button>
+    </div>
+
+    <div id="step3" class="hidden space-y-6 animate-fadeIn">
+      <p class="mt-6 mb-3 text-lg font-light">Apa MBTI kamu?</p>
+      
+      <button onclick="openModal('mbti')" id="mbtiButton" class="w-full bg-white/20 border-white/30 border text-white p-3 rounded-xl text-left flex justify-between items-center hover:bg-white/30 transition duration-300">
+          <span id="selectedMbti">Pilih MBTI kamu...</span>
+          <span class="text-xl">⬇️</span>
+      </button>
+
+      <button onclick="showResult()" id="showResultButton" disabled class="w-full mt-4 bg-indigo-500/50 cursor-not-allowed px-4 py-2 rounded-xl text-base md:text-lg font-medium transition duration-300">Temukan Pasanganmu <span class="ml-1">❤️</span></button>
+    </div>
+
+    <div id="result" class="hidden mt-8 space-y-4 animate-fadeIn">
+      <h2 class="text-1xl md:text-2xl font-bold mb-2 text-pink-300">💫 Sifat kamu itu.. 💫</h2>
+      <p id="fact" class="text-sm md:text-base mb-4 text-pink-100 italic p-4 bg-white/10 rounded-lg text-left"></p>
+      <p id="match" class="text-sm md:text-base font-bold p-4 bg-white/20 rounded-xl"></p>
+      <button onclick="restart()" class="mt-5 bg-white/20 hover:bg-white/30 active:bg-white/40 transition duration-300 px-6 py-2 rounded-xl text-base font-medium">Coba Lagi <span class="ml-1">🔄</span></button>
+    </div>
+  </div>
+
+  <div id="selectionModal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 transition duration-300">
+    <div class="bg-indigo-800/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl w-full max-w-sm border border-pink-400/50 modal-in max-h-[80vh] flex flex-col">
+      <h3 id="modalTitle" class="text-2xl font-bold mb-4 text-pink-300 text-center">Pilih Pilihan</h3>
+      
+      <div id="modalOptionsContainer" class="space-y-2 overflow-y-auto custom-scroll flex-grow">
+        </div>
+      
+      <button onclick="closeModal()" class="mt-6 bg-pink-500 hover:bg-pink-600 py-2 rounded-xl font-semibold">Tutup</button>
+    </div>
+  </div>
+
+  <script>
+    let userData = { zodiac: '', mbti: '' };
+    const audio = document.getElementById('backgroundMusic');
+    const modal = document.getElementById('selectionModal');
+    const optionsContainer = document.getElementById('modalOptionsContainer');
+    const modalTitle = document.getElementById('modalTitle');
+    let currentSelectionType = ''; // 'zodiac' atau 'mbti'
+
+    const zodiacs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+    const mbtis = ["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP", "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"];
+
+    const zodiacFacts = {
+      Aries: "dikenal berani, energik, dan spontan.",
+      Taurus: "cinta kenyamanan dan setia banget.",
+      Gemini: "pintar ngobrol dan cepat beradaptasi.",
+      Cancer: "emosional, lembut, dan sangat peduli.",
+      Leo: "suka jadi pusat perhatian dan sangat percaya diri.",
+      Virgo: "perfeksionis dan peduli pada detail.",
+      Libra: "cinta keharmonisan dan estetika.",
+      Scorpio: "misterius, intens, dan sangat setia.",
+      Sagittarius: "petualang sejati dan optimis.",
+      Capricorn: "ambisius dan pekerja keras.",
+      Aquarius: "berpikir bebas dan suka hal unik.",
+      Pisces: "romantis, kreatif, dan penuh empati."
+    };
+
+    const zodiacMatch = {
+      Aries: "Leo atau Sagittarius 🔥",
+      Taurus: "Virgo atau Capricorn 🌿",
+      Gemini: "Libra atau Aquarius 🌬️",
+      Cancer: "Scorpio atau Pisces 💧",
+      Leo: "Aries atau Sagittarius 🔥",
+      Virgo: "Taurus atau Capricorn 🌿",
+      Libra: "Gemini atau Aquarius 🌬️",
+      Scorpio: "Cancer atau Pisces 💧",
+      Sagittarius: "Aries atau Leo 🔥",
+      Capricorn: "Taurus atau Virgo 🌿",
+      Aquarius: "Gemini atau Libra 🌬️",
+      Pisces: "Cancer atau Scorpio 💧"
+    };
+
+    // START: Tambahan Objek MBTI Match
+    const mbtiMatch = {
+      INTJ: "ENFP, ENTP 💡",
+      INTP: "ENTJ, ESTJ 🧠",
+      ENTJ: "INTP, ENFJ 👑",
+      ENTP: "INFJ, INTJ 💭",
+      INFJ: "ENFP, ENTP 🕊️",
+      INFP: "ENFJ, ENTJ ✨",
+      ENFJ: "INFP, INFJ 💖",
+      ENFP: "INTJ, INFJ 🌟",
+      ISTJ: "ESFP, ESTP 🛠️",
+      ISFJ: "ESFP, ESTP 🏠",
+      ESTJ: "ISFP, INTP 🏛️",
+      ESFJ: "ISFP, ISTP 🤝",
+      ISTP: "ESFJ, ESTJ ⚙️",
+      ISFP: "ESTJ, ESFJ 🎨",
+      ESTP: "ISFJ, ISTJ 🚀",
+      ESFP: "ISTJ, ISFJ 🎉"
+    };
+    // END: Tambahan Objek MBTI Match
+
+    const mbtiInsights = {
+      INTJ: "Kamu itu cenderung mencintai dengan logika dan kesetiaan mendalam, kamu suka nunjukim kasih sayang lewat tindakan langsung, bukan kata-kata, dan kamu maunya cari pasangan yang sevisi dan bisa memahami kepintarannya.",
+      INFJ: "Kamu itu mencintai dengan penuh empati dan rasa emosional, kamu mengekspresikan kasih sayang secara tulus dan hangat, dan kamu juga mendambakan hubungan yang bermakna dan saling memahami antara satu sama lain.",
+      ISTJ: "Kamu itu orangnya mencintai dengan tanggung jawab dan kesetiaan tinggi, kamu suka nunjukkin kasih sayang lewat tindakan langsung, dan kamu maunya cari pasangan yang dapat diandalkan dan ngehargain komitmen.",
+      ISTP: "Kamu itu mencintai dengan cara tenang dan praktis, kamu suka mengekspresikan kasih sayang melalui tindakan spontan dan perhatian sederhana, dan kamu maunya cari pasangan yang mandiri dan menghargai kebebasan.",
+      INTP: "Kamu suka mencintai dengan cara yang analitis dan penuh rasa ingin tahu, kamu suka menunjukkan kasih sayang lewat percakapan mendalam dan pemahaman intelektual, dan kamu juga suka cari pasangan yang menghargai ruang pribadi dan cara berpikirnya yang unik.",
+      INFP: "Kamu itu mencintai dengan idealisme dan ketulusan hati, kamu suka mengekspresikan kasih sayang secara lembut dan penuh makna, dan kamu maunya cari pasangan yang autentik dan sejiwa secara emosional.",
+      ISFJ: "Kamu itu orangnya mencintai dengan kelembutan dan kepedulian mendalam, kamu suka menunjukkan kasih sayang melalui perhatian dan pengorbanan kecil, dan kamu maunya mencari pasangan yang setia dan menghargai ketulusan hatinya.",
+      ISFP: "Kamu itu mencintai dengan kehangatan dan kejujuran hati, kamu suka mengekspresikan kasih sayang lewat tindakan lembut dan spontan, dan kamu maunya mencari pasangan yang tulus, penuh empati, dan menghargai perasaan mereka.",
+      ENTJ: "Kamu itu mencintai dengan intensitas dan tujuan jelas, kamu suka menunjukkan kasih sayang melalui dukungan dan ambisi bersama, dan kamu maunya cari pasangan yang kuat, mandiri, dan sejalan dengan visi hidupnya.",
+      ENFJ: "Kamu itu mencintai dengan penuh perhatian dan kehangatan, kamu suka mengekspresikan kasih sayang melalui dukungan emosional dan tindakan romantis, dan kamu maunya cari pasangan yang responsif dan seimbang secara emosional.",
+      ESTJ: "Kamu itu orangnya mencintai dengan komitmen dan tanggung jawab kuat, kamu suka mengekspresikan kasih sayang lewat tindakan nyata dan kestabilan, dan kamu maunya cari pasangan yang dapat diandalkan dan menghargai struktur dalam hubungan.",
+      ESTP: "Kamu itu mencintai dengan spontanitas dan energi tinggi, kamu suka mengekspresikan kasih sayang lewat aksi menyenangkan dan perhatian langsung, dan kamu maunya cari pasangan yang bersemangat dan mampu mengikuti ritme hidupnya.",
+      ENTP: "Kamu itu mencintai dengan cara dinamis dan penuh gairah intelektual, kamu suka mengekspresikan kasih sayang lewat humor, debat ringan, dan ide kreatif, dan kamu maunya cari pasangan yang cerdas, fleksibel, dan mampu menantangnya secara mental.",
+      ENFP: "Kamu itu orangnya mencintai dengan antusiasme dan spontanitas emosional, kamu suka mengekspresikan kasih sayang lewat perhatian hangat dan ekspresi kreatif, kamu maunya cari pasangan yang tulus, suportif, dan sejiwa dalam semangat hidup.",
+      ESFJ: "Kamu itu mencintai dengan kelembutan dan kepedulian tulus, kamu suka mengekspresikan kasih sayang melalui perhatian dan dukungan konstan,dan kamu maunya cari pasangan yang setia dan menghargai keharmonisan dalam hubungan.",
+      ESFP: "Kamu itu orangnya mencintai dengan keceriaan dan kehangatan spontan, kamu suka mengekspresikan kasih sayang lewat sentuhan, tawa, dan momen menyenangkan, dan kamu maunya cari pasangan yang penuh energi dan menikmati hidup bersamanya."
+    };
+
+    // Fungsi untuk mengaktifkan tombol "Lanjut"
+    function checkSteps() {
+        const nextButton = document.getElementById('nextStep2Button');
+        const showButton = document.getElementById('showResultButton');
+        
+        // Cek Step 2
+        if (userData.zodiac) {
+            nextButton.disabled = false;
+            nextButton.classList.remove('bg-pink-500/50', 'cursor-not-allowed');
+            nextButton.classList.add('bg-pink-500', 'hover:bg-pink-600', 'active:bg-pink-700');
+        } else {
+            nextButton.disabled = true;
+            nextButton.classList.add('bg-pink-500/50', 'cursor-not-allowed');
+            nextButton.classList.remove('bg-pink-500', 'hover:bg-pink-600', 'active:bg-pink-700');
+        }
+
+        // Cek Step 3
+        if (userData.mbti) {
+            showButton.disabled = false;
+            showButton.classList.remove('bg-indigo-500/50', 'cursor-not-allowed');
+            showButton.classList.add('bg-indigo-500', 'hover:bg-indigo-600', 'active:bg-indigo-700');
+        } else {
+            showButton.disabled = true;
+            showButton.classList.add('bg-indigo-500/50', 'cursor-not-allowed');
+            showButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-600', 'active:bg-indigo-700');
+        }
+    }
+
+    // Fungsi untuk membuka Modal
+    function openModal(type) {
+        currentSelectionType = type;
+        optionsContainer.innerHTML = '';
+        const dataArray = type === 'zodiac' ? zodiacs : mbtis;
+        modalTitle.innerText = type === 'zodiac' ? 'Pilih Zodiak Kamu' : 'Pilih MBTI Kamu';
+        
+        dataArray.forEach(item => {
+            const isSelected = userData[type] === item;
+            const itemElement = document.createElement('button');
+            itemElement.textContent = item;
+            itemElement.className = `w-full p-3 rounded-lg text-lg text-left transition duration-200 
+                                      ${isSelected ? 'bg-pink-500 font-bold shadow-md' : 'bg-white/10 hover:bg-white/20'}`;
+            itemElement.onclick = () => selectOption(item);
+            optionsContainer.appendChild(itemElement);
+        });
+
+        modal.classList.remove('hidden');
+    }
+
+    // Fungsi untuk menutup Modal
+    function closeModal() {
+        modal.classList.add('hidden');
+        checkSteps(); // Cek status tombol setelah menutup modal
+    }
+
+    // Fungsi saat pilihan di modal diklik
+    function selectOption(value) {
+        userData[currentSelectionType] = value;
+        
+        if (currentSelectionType === 'zodiac') {
+            document.getElementById('selectedZodiac').innerText = `Zodiak kamu: ${value}`;
+        } else if (currentSelectionType === 'mbti') {
+            document.getElementById('selectedMbti').innerText = `MBTI kamu: ${value}`;
+        }
+        
+        closeModal();
+    }
+
+
+    function selectGender(gender) {
+      userData.gender = gender;
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+      
+      // Otomatis putar musik saat interaksi pertama (klik tombol)
+      if (audio.paused) {
+        audio.volume = 0.4;
+        audio.play().catch(error => {
+          console.log('Autoplay was prevented. User interaction required to play audio.', error);
+        });
+      }
+    }
+
+    function nextStep(step) {
+      if (!userData.zodiac) return; // Mencegah pindah jika belum memilih
+      document.getElementById(`step${step - 1}`).classList.add('hidden');
+      document.getElementById(`step${step}`).classList.remove('hidden');
+    }
+
+    function showResult() {
+      if (!userData.mbti) return; // Mencegah pindah jika belum memilih
+
+      const zodiac = userData.zodiac;
+      const mbti = userData.mbti;
+
+      const fact = `${zodiacFacts[zodiac]} ${mbtiInsights[mbti] ? mbtiInsights[mbti] : ''}`;
+      
+      // START: Modifikasi untuk menggabungkan hasil Zodiac dan MBTI Match
+      const mbtiPartner = mbtiMatch[mbti] ? mbtiMatch[mbti] : 'Tidak Ditemukan';
+      const zodiacPartner = zodiacMatch[zodiac];
+      const match = `Pasangan zodiak ideal kamu: ${zodiacPartner}. Pasangan MBTI ideal kamu: ${mbtiPartner}!`;
+      // END: Modifikasi
+
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('result').classList.remove('hidden');
+      document.getElementById('fact').innerText = fact;
+      document.getElementById('match').innerText = match;
+    }
+
+    function restart() {
+      userData = { zodiac: '', mbti: '' };
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+
+      // Reset tampilan tombol
+      document.getElementById('selectedZodiac').innerText = 'Pilih zodiak kamu...';
+      document.getElementById('selectedMbti').innerText = 'Pilih MBTI kamu...';
+      checkSteps();
+    }
+    
+    // Inisialisasi status tombol
+    checkSteps();
+  </script>
+
+</body>
+</html>
